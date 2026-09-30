@@ -1,0 +1,4 @@
+# Go sources must use LF: gofmt treats CRLF files as unformatted.
+*.go text eol=lf
+go.mod text eol=lf
+go.sum text eol=lf
