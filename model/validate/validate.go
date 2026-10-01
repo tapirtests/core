@@ -23,6 +23,7 @@ func Project(p *model.Project, file string) diag.List {
 	val := validator{p: p, file: file}
 
 	val.validateProject()
+	val.validateRequests()
 
 	val.diags.Sort()
 	return val.diags

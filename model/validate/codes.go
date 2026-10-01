@@ -54,7 +54,34 @@ const (
 	V0501 diag.Code = "V0501" // env variable name is not an identifier
 	V0502 diag.Code = "V0502" // env variable is declared more than once
 
-	// Requests
+	// Requests: the definition itself.
+	V0600 diag.Code = "V0600" // request entry is nil
+	V0601 diag.Code = "V0601" // request ID is empty
+	V0602 diag.Code = "V0602" // request ID differs from its key in requests
+	V0603 diag.Code = "V0603" // request has no operation
+	V0604 diag.Code = "V0604" // operation protocol is not supported
+
+	// Requests: HTTP operation.
+	V0605 diag.Code = "V0605" // HTTP method is empty
+	V0606 diag.Code = "V0606" // HTTP method is not supported
+	V0607 diag.Code = "V0607" // HTTP path is empty
+	V0608 diag.Code = "V0608" // HTTP path does not start with "/"
+	V0609 diag.Code = "V0609" // HTTP path template is malformed: unbalanced or empty {}
+	V0610 diag.Code = "V0610" // path parameter {x} has no path.x input
+
+	// Requests: input contract.
+	V0611 diag.Code = "V0611" // input name is empty
+	V0612 diag.Code = "V0612" // input location (name prefix) is unknown
+	V0613 diag.Code = "V0613" // input name has no field after its location, e.g. "query."
+	V0614 diag.Code = "V0614" // input is declared more than once
+	V0615 diag.Code = "V0615" // path.x input has no {x} in the path template
+	V0616 diag.Code = "V0616" // path input is not required
+	V0617 diag.Code = "V0617" // auth input refers to an unknown security scheme
+	V0618 diag.Code = "V0618" // whole-body input "body" is combined with body.<field> inputs
+
+	// Requests: output contract and schemas.
+	V0619 diag.Code = "V0619" // response key is neither an HTTP status code nor "default"
+	V0620 diag.Code = "V0620" // schema is not valid JSON
 
 	// Scenarios
 
