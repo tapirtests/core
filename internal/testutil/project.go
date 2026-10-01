@@ -24,9 +24,9 @@ import (
 // thing") without affecting each other.
 func ValidProject() *model.Project {
 	return &model.Project{
-		TapirVersion: "1",
-		Name:         "shop-e2e",
-		BaseURL:      "{{env.BASE_URL}}",
+		FormatVersion: "1",
+		Name:          "shop-e2e",
+		BaseURL:       "{{env.BASE_URL}}",
 		Spec: model.SpecRef{
 			Type: "swagger2",
 			Path: "tapir.spec.json",
