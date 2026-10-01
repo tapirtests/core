@@ -1,3 +1,6 @@
+// Package validate checks a model.Project for semantic problems: broken
+// references, contract violations, duplicates. It runs after the project was
+// loaded and before it is executed.
 package validate
 
 import (
@@ -5,8 +8,19 @@ import (
 	"github.com/tapirtests/core/model"
 )
 
+// Project checks p and returns every problem found, sorted by location.
+// file is the name of the document the project was loaded from; it is put
+// into every diagnostic.
+//
+// Project never modifies p and never panics on incomplete projects (nil maps,
+// nil root): the loader may hand over whatever it managed to build. A nil
+// project yields no diagnostics.
 func Project(p *model.Project, file string) diag.List {
-	val := validator{p: p, file: file, diags: make([]diag.Diagnostic, 0)}
+	if p == nil {
+		return nil
+	}
+
+	val := validator{p: p, file: file}
 
 	val.validateProject()
 
@@ -14,6 +28,8 @@ func Project(p *model.Project, file string) diag.List {
 	return val.diags
 }
 
+// validator holds the state of one Project check; each section of the
+// project is checked by its own method.
 type validator struct {
 	p     *model.Project
 	file  string
@@ -21,9 +37,9 @@ type validator struct {
 }
 
 func (v *validator) errorf(code diag.Code, ptr diag.Pointer, format string, args ...any) {
-	v.diags.Add(diag.Errorf(code, diag.Location{File: v.file, Pointer: ptr}, format, args...))
+	v.diags.Add(diag.Errorf(code, diag.At(v.file, ptr), format, args...))
 }
 
 func (v *validator) warnf(code diag.Code, ptr diag.Pointer, format string, args ...any) {
-	v.diags.Add(diag.Warningf(code, diag.Location{File: v.file, Pointer: ptr}, format, args...))
+	v.diags.Add(diag.Warningf(code, diag.At(v.file, ptr), format, args...))
 }
