@@ -38,10 +38,21 @@ const (
 	V0303 diag.Code = "V0303" // spec.hash is empty while other spec fields are set
 	V0304 diag.Code = "V0304" // spec.type is not supported
 
-	// SecuritySchemes
-	V0400 diag.Code = "V0400" // security schemes are missed
+	// SecuritySchemes. Scheme names are chosen by the API author and may be
+	// anything; what is limited is the kind of scheme the core can apply.
+	V0400 diag.Code = "V0400" // security scheme entry is nil
+	V0401 diag.Code = "V0401" // security scheme name is empty
+	V0402 diag.Code = "V0402" // security scheme name differs from its key in securitySchemes
+	V0403 diag.Code = "V0403" // security scheme type is empty
+	V0404 diag.Code = "V0404" // security scheme type is not supported
+	V0405 diag.Code = "V0405" // security scheme location (in) is empty
+	V0406 diag.Code = "V0406" // security scheme location (in) is not supported
+	V0407 diag.Code = "V0407" // security scheme parameter name is empty
 
 	// Env
+	V0500 diag.Code = "V0500" // env variable name is empty
+	V0501 diag.Code = "V0501" // env variable name is not an identifier
+	V0502 diag.Code = "V0502" // env variable is declared more than once
 
 	// Requests
 

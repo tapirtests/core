@@ -1,6 +1,7 @@
 package validate
 
 import (
+	"regexp"
 	"slices"
 
 	"github.com/tapirtests/core/diag"
@@ -16,8 +17,20 @@ const rootGroupName = "root"
 // supportedSpecTypes lists the specification formats the core can import.
 var supportedSpecTypes = []string{"swagger2"}
 
-// validateProject checks the top-level fields of the project: format version,
-// name, base URL, specification reference and the presence of the root group.
+// supportedSecurityTypes and supportedSecurityIn list the kinds of security
+// schemes the core can apply to a request.
+var (
+	supportedSecurityTypes = []model.SecurityType{model.SecurityAPIKey}
+	supportedSecurityIn    = []model.ParamIn{model.InHeader, model.InQuery}
+)
+
+// envNamePattern is the allowed form of an env variable name: it must be
+// usable in templates as {{env.NAME}} and in .env files.
+var envNamePattern = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*$`)
+
+// validateProject checks the global part of the project: format version,
+// name, base URL, specification reference, security schemes, env variables
+// and the presence of the root group.
 func (v *validator) validateProject() {
 	v.validateVersion()
 
@@ -30,6 +43,8 @@ func (v *validator) validateProject() {
 	}
 
 	v.validateSpec()
+	v.validateSecuritySchemes()
+	v.validateEnv()
 	v.validateRoot()
 }
 
@@ -66,6 +81,71 @@ func (v *validator) validateSpec() {
 	}
 	if spec.Hash == "" {
 		v.errorf(V0303, ptr.Key("hash"), "spec hash is required when a spec is set")
+	}
+}
+
+// validateSecuritySchemes checks every security scheme. Having no schemes is
+// valid: an API may require no authorization at all. Scheme names are free:
+// they come from the specification; only the kind of scheme is limited.
+func (v *validator) validateSecuritySchemes() {
+	base := diag.Root.Key("securitySchemes")
+	for key, scheme := range v.p.SecuritySchemes {
+		ptr := base.Key(key)
+		if scheme == nil {
+			v.errorf(V0400, ptr, "security scheme %q is empty", key)
+			continue
+		}
+
+		switch scheme.Name {
+		case key:
+		case "":
+			v.errorf(V0401, ptr.Key("name"), "security scheme name is required")
+		default:
+			v.errorf(V0402, ptr.Key("name"), "security scheme name %q differs from its key %q",
+				scheme.Name, key)
+		}
+
+		switch {
+		case scheme.Type == "":
+			v.errorf(V0403, ptr.Key("type"), "security scheme type is required")
+		case !slices.Contains(supportedSecurityTypes, scheme.Type):
+			v.errorf(V0404, ptr.Key("type"), "unsupported security scheme type %q, supported: %q",
+				scheme.Type, supportedSecurityTypes)
+		}
+
+		switch {
+		case scheme.In == "":
+			v.errorf(V0405, ptr.Key("in"), "security scheme location (in) is required")
+		case !slices.Contains(supportedSecurityIn, scheme.In):
+			v.errorf(V0406, ptr.Key("in"), "unsupported security scheme location %q, supported: %q",
+				scheme.In, supportedSecurityIn)
+		}
+
+		if scheme.ParamName == "" {
+			v.errorf(V0407, ptr.Key("paramName"), "security scheme parameter name is required")
+		}
+	}
+}
+
+// validateEnv checks env variable declarations. Duplicates are reported on
+// every repeated declaration, the first one is considered the original.
+func (v *validator) validateEnv() {
+	base := diag.Root.Key("env")
+	seen := make(map[string]bool, len(v.p.Env))
+	for i, e := range v.p.Env {
+		ptr := base.Index(i).Key("name")
+		switch {
+		case e.Name == "":
+			v.errorf(V0500, ptr, "env variable name is required")
+			continue
+		case !envNamePattern.MatchString(e.Name):
+			v.errorf(V0501, ptr, "env variable name %q must match %s", e.Name, envNamePattern)
+		}
+
+		if seen[e.Name] {
+			v.errorf(V0502, ptr, "env variable %q is declared more than once", e.Name)
+		}
+		seen[e.Name] = true
 	}
 }
 
