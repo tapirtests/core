@@ -4,6 +4,8 @@
 package validate
 
 import (
+	"regexp"
+
 	"github.com/tapirtests/core/diag"
 	"github.com/tapirtests/core/model"
 )
@@ -24,6 +26,7 @@ func Project(p *model.Project, file string) diag.List {
 
 	val.validateProject()
 	val.validateRequests()
+	val.validateScenarios()
 
 	val.diags.Sort()
 	return val.diags
@@ -44,3 +47,10 @@ func (v *validator) errorf(code diag.Code, ptr diag.Pointer, format string, args
 func (v *validator) warnf(code diag.Code, ptr diag.Pointer, format string, args ...any) {
 	v.diags.Add(diag.Warningf(code, diag.At(v.file, ptr), format, args...))
 }
+
+// identifierPattern is the allowed form of a declared name: env variables,
+// scenario inputs and outputs, extracted variables. Such names are used in
+// templates ({{name}}, {{env.NAME}}) and in .env files. Dots are not allowed:
+// they are reserved for automatic output names "<alias>.<output>", so a
+// declared name never clashes with one.
+var identifierPattern = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*$`)

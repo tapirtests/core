@@ -83,7 +83,52 @@ const (
 	V0619 diag.Code = "V0619" // response key is neither an HTTP status code nor "default"
 	V0620 diag.Code = "V0620" // schema is not valid JSON
 
-	// Scenarios
+	// Scenarios: the definition itself.
+	V0700 diag.Code = "V0700" // scenario entry is nil
+	V0701 diag.Code = "V0701" // scenario ID is empty
+	V0702 diag.Code = "V0702" // scenario ID differs from its key in scenarios
+
+	// Scenarios: signature.
+	V0703 diag.Code = "V0703" // scenario input name is empty
+	V0704 diag.Code = "V0704" // scenario input name is not an identifier
+	V0705 diag.Code = "V0705" // scenario input is declared more than once
+	V0706 diag.Code = "V0706" // scenario output name is empty
+	V0707 diag.Code = "V0707" // scenario output name is not an identifier
+	V0708 diag.Code = "V0708" // scenario output is declared more than once
+	V0709 diag.Code = "V0709" // scenario output has no value
+	V0710 diag.Code = "V0710" // required scenario input has a default that is never used (warning)
+
+	// Scenarios: steps.
+	V0711 diag.Code = "V0711" // scenario has no steps (warning)
+	V0712 diag.Code = "V0712" // step is nil
+	V0713 diag.Code = "V0713" // step ID is empty
+	V0714 diag.Code = "V0714" // step ID is used more than once in the scenario
+	V0715 diag.Code = "V0715" // step kind is not supported
+
+	// Scenarios: request call steps.
+	V0716 diag.Code = "V0716" // request call has no request ID
+	V0717 diag.Code = "V0717" // request call refers to an unknown request
+	V0718 diag.Code = "V0718" // request call passes an input the request does not declare
+	V0719 diag.Code = "V0719" // request call does not pass a required input
+	V0720 diag.Code = "V0720" // request call timeout is negative
+	V0721 diag.Code = "V0721" // extracted variable name is empty
+	V0722 diag.Code = "V0722" // extracted variable name is not an identifier
+	V0723 diag.Code = "V0723" // extract path does not start with "$"
+
+	// Scenarios: assertions.
+	V0724 diag.Code = "V0724" // assertion target is empty
+	V0725 diag.Code = "V0725" // assertion target is not supported
+	V0726 diag.Code = "V0726" // assertion operator is empty
+	V0727 diag.Code = "V0727" // assertion operator is not supported
+	V0728 diag.Code = "V0728" // assertion operator is not applicable to its target
+	V0729 diag.Code = "V0729" // assertion path must be empty for status and duration
+	V0730 diag.Code = "V0730" // assertion path is required for body and header
+	V0731 diag.Code = "V0731" // body assertion path does not start with "$"
+	V0732 diag.Code = "V0732" // assertion operator requires a value
+	V0733 diag.Code = "V0733" // assertion value is ignored by exists/notExists (warning)
+	V0734 diag.Code = "V0734" // "in" requires an array value
+	V0735 diag.Code = "V0735" // "matches" requires a valid regular expression
+	V0736 diag.Code = "V0736" // comparison and "length" require a number
 
 	// Root
 	V0800 diag.Code = "V0800" // project has no root group

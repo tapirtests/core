@@ -1,7 +1,6 @@
 package validate
 
 import (
-	"regexp"
 	"slices"
 
 	"github.com/tapirtests/core/diag"
@@ -23,10 +22,6 @@ var (
 	supportedSecurityTypes = []model.SecurityType{model.SecurityAPIKey}
 	supportedSecurityIn    = []model.ParamIn{model.InHeader, model.InQuery}
 )
-
-// envNamePattern is the allowed form of an env variable name: it must be
-// usable in templates as {{env.NAME}} and in .env files.
-var envNamePattern = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*$`)
 
 // validateProject checks the global part of the project: format version,
 // name, base URL, specification reference, security schemes, env variables
@@ -138,8 +133,8 @@ func (v *validator) validateEnv() {
 		case e.Name == "":
 			v.errorf(V0500, ptr, "env variable name is required")
 			continue
-		case !envNamePattern.MatchString(e.Name):
-			v.errorf(V0501, ptr, "env variable name %q must match %s", e.Name, envNamePattern)
+		case !identifierPattern.MatchString(e.Name):
+			v.errorf(V0501, ptr, "env variable name %q must match %s", e.Name, identifierPattern)
 		}
 
 		if seen[e.Name] {
