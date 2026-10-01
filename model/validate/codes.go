@@ -4,40 +4,42 @@ import "github.com/tapirtests/core/diag"
 
 // Codes reported by the validator.
 //
-// Format: V<section><ordinal>. Sections:
+// Format: V<section><ordinal>, two digits each, so every code has the same
+// length and codes sort in their natural order. Sections:
 //
-//	V00x  tapirVersion
-//	V01x  name
-//	V02x  baseUrl
-//	V03x  spec
-//	V04x  security schemes
-//	V05x  env
-//	V06x  requests
-//	V07x  scenarios
-//	V08x  groups
+//	V00xx  formatVersion
+//	V01xx  name
+//	V02xx  baseUrl
+//	V03xx  spec
+//	V04xx  security schemes
+//	V05xx  env
+//	V06xx  requests
+//	V07xx  scenarios
+//	V08xx  groups
 //
 // A code is published once and never reused or renumbered: UIs, docs and
 // user filters depend on it. Other components use their own letters:
 // F (format), S (specification), N (env values).
 const (
-	// TapirVersion
-	V000 diag.Code = "V000" // tapirVersion is empty
-	V001 diag.Code = "V001" // tapirVersion is not supported by this core
+	// FormatVersion
+	V0000 diag.Code = "V0000" // formatVersion is empty
+	V0001 diag.Code = "V0001" // formatVersion is not supported by this core
 
 	// Name
-	V010 diag.Code = "V010" // project name is empty (warning)
+	V0100 diag.Code = "V0100" // project name is empty (warning)
 
 	// BaseURL
-	V020 diag.Code = "V020" // baseUrl is empty
+	V0200 diag.Code = "V0200" // baseUrl is empty
 
 	// Spec. The spec is optional (a project may consist of custom requests
 	// only), but if any of its fields is set, all of them must be set.
-	V031 diag.Code = "V031" // spec.type is empty while other spec fields are set
-	V032 diag.Code = "V032" // spec.path is empty while other spec fields are set
-	V033 diag.Code = "V033" // spec.hash is empty while other spec fields are set
-	V034 diag.Code = "V034" // spec.type is not supported
+	V0301 diag.Code = "V0301" // spec.type is empty while other spec fields are set
+	V0302 diag.Code = "V0302" // spec.path is empty while other spec fields are set
+	V0303 diag.Code = "V0303" // spec.hash is empty while other spec fields are set
+	V0304 diag.Code = "V0304" // spec.type is not supported
 
 	// SecuritySchemes
+	V0400 diag.Code = "V0400" // security schemes are missed
 
 	// Env
 
@@ -46,6 +48,6 @@ const (
 	// Scenarios
 
 	// Root
-	V080 diag.Code = "V080" // project has no root group
-	V081 diag.Code = "V081" // root group is not named "root"
+	V0800 diag.Code = "V0800" // project has no root group
+	V0801 diag.Code = "V0801" // root group is not named "root"
 )

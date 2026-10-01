@@ -22,11 +22,11 @@ func (v *validator) validateProject() {
 	v.validateVersion()
 
 	if v.p.Name == "" {
-		v.warnf(V010, diag.Root.Key("name"), "project name is empty")
+		v.warnf(V0100, diag.Root.Key("name"), "project name is empty")
 	}
 
 	if v.p.BaseURL == "" {
-		v.errorf(V020, diag.Root.Key("baseUrl"), "base URL is required")
+		v.errorf(V0200, diag.Root.Key("baseUrl"), "base URL is required")
 	}
 
 	v.validateSpec()
@@ -34,14 +34,14 @@ func (v *validator) validateProject() {
 }
 
 func (v *validator) validateVersion() {
-	ptr := diag.Root.Key("tapirVersion")
-	switch v.p.TapirVersion {
+	ptr := diag.Root.Key("formatVersion")
+	switch v.p.FormatVersion {
 	case supportedVersion:
 	case "":
-		v.errorf(V000, ptr, "tapir version is required")
+		v.errorf(V0000, ptr, "format version is required")
 	default:
-		v.errorf(V001, ptr, "unsupported tapir version %q, supported: %q",
-			v.p.TapirVersion, supportedVersion)
+		v.errorf(V0001, ptr, "unsupported format version %q, supported: %q",
+			v.p.FormatVersion, supportedVersion)
 	}
 }
 
@@ -56,27 +56,27 @@ func (v *validator) validateSpec() {
 
 	ptr := diag.Root.Key("spec")
 	if spec.Type == "" {
-		v.errorf(V031, ptr.Key("type"), "spec type is required when a spec is set")
+		v.errorf(V0301, ptr.Key("type"), "spec type is required when a spec is set")
 	} else if !slices.Contains(supportedSpecTypes, spec.Type) {
-		v.errorf(V034, ptr.Key("type"), "unsupported spec type %q, supported: %q",
+		v.errorf(V0304, ptr.Key("type"), "unsupported spec type %q, supported: %q",
 			spec.Type, supportedSpecTypes)
 	}
 	if spec.Path == "" {
-		v.errorf(V032, ptr.Key("path"), "spec path is required when a spec is set")
+		v.errorf(V0302, ptr.Key("path"), "spec path is required when a spec is set")
 	}
 	if spec.Hash == "" {
-		v.errorf(V033, ptr.Key("hash"), "spec hash is required when a spec is set")
+		v.errorf(V0303, ptr.Key("hash"), "spec hash is required when a spec is set")
 	}
 }
 
 func (v *validator) validateRoot() {
 	ptr := diag.Root.Key("root")
 	if v.p.Root == nil {
-		v.errorf(V080, ptr, "root group is required")
+		v.errorf(V0800, ptr, "root group is required")
 		return
 	}
 	if v.p.Root.Name != rootGroupName {
-		v.errorf(V081, ptr.Key("name"), "root group must be named %q, got %q",
+		v.errorf(V0801, ptr.Key("name"), "root group must be named %q, got %q",
 			rootGroupName, v.p.Root.Name)
 	}
 }

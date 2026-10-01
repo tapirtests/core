@@ -110,7 +110,7 @@ func TestIncompleteProjectsDoNotPanic(t *testing.T) {
 	cases := map[string]*model.Project{
 		"nil project":   nil,
 		"empty project": {},
-		"empty root":    {TapirVersion: "1", Root: &model.Group{Name: "root"}},
+		"empty root":    {FormatVersion: "1", Root: &model.Group{Name: "root"}},
 	}
 	for name, p := range cases {
 		t.Run(name, func(t *testing.T) {

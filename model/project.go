@@ -5,9 +5,9 @@ package model
 // It holds the four global objects: the Requests, Scenario and Env variable
 // buckets and the root group.
 type Project struct {
-	TapirVersion string // version of the tapir.json format (not of the core), e.g. "1"
-	Name         string // project name
-	BaseURL      string // API base URL; taken from the specification on import, may be a template like "{{env.BASE_URL}}"
+	FormatVersion string // version of the tapir.json format (not of the core), e.g. "1"
+	Name          string // project name
+	BaseURL       string // API base URL; taken from the specification on import, may be a template like "{{env.BASE_URL}}"
 
 	Spec            SpecRef                    // API specification the requests were imported from
 	SecuritySchemes map[string]*SecurityScheme // how the API accepts credentials, keyed by scheme name: bearer, ...
