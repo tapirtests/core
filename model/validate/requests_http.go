@@ -61,25 +61,39 @@ func (v *validator) validateHTTPOperation(op model.HTTPOperation, ptr diag.Point
 // "/shops/{shopId}/products/{id}".
 func parsePathTemplate(path string) ([]string, error) {
 	var names []string
-	for rest := path; rest != ""; {
-		open := strings.IndexAny(rest, "{}")
-		if open < 0 {
-			break
+	currName := ""
+	isBracketOpen := false
+
+	for i := 0; i < len(path); i++ {
+		switch {
+		case path[i] == '{':
+			if isBracketOpen {
+				return nil, fmt.Errorf("path contains wrong brackets sequence")
+			}
+			isBracketOpen = true
+
+		case path[i] == '}':
+			if !isBracketOpen {
+				return nil, fmt.Errorf("path contains wrong brackets sequence")
+			}
+			if len(currName) == 0 {
+				return nil, fmt.Errorf("empty parameter name \"{}\"")
+			}
+			names = append(names, currName)
+			currName = ""
+			isBracketOpen = false
+
+		default:
+			if isBracketOpen {
+				currName += string(path[i])
+			}
 		}
-		if rest[open] == '}' {
-			return nil, fmt.Errorf(`unexpected "}"`)
-		}
-		closeIdx := strings.IndexAny(rest[open+1:], "{}")
-		if closeIdx < 0 || rest[open+1+closeIdx] == '{' {
-			return nil, fmt.Errorf(`unclosed "{"`)
-		}
-		name := rest[open+1 : open+1+closeIdx]
-		if name == "" {
-			return nil, fmt.Errorf(`empty parameter name "{}"`)
-		}
-		names = append(names, name)
-		rest = rest[open+1+closeIdx+1:]
 	}
+
+	if isBracketOpen {
+		return nil, fmt.Errorf("path contains wrong brackets sequence")
+	}
+
 	return names, nil
 }
 
