@@ -20,6 +20,9 @@ const (
 
 	// Spec
 	V030 diag.Code = "V030" // Missing Spec field
+	V031 diag.Code = "V031" // Missing Spec name field
+	V032 diag.Code = "V032" // Missing Spec path field
+	V033 diag.Code = "V033" // Missing Spec hash field
 
 	// SecuritySchemes
 	V040 diag.Code = "V040" // Missing SecuritySchemes field
