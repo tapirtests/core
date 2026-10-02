@@ -130,7 +130,22 @@ const (
 	V0735 diag.Code = "V0735" // "matches" requires a valid regular expression
 	V0736 diag.Code = "V0736" // comparison and "length" require a number
 
-	// Root
+	// Groups: the tree.
 	V0800 diag.Code = "V0800" // project has no root group
 	V0801 diag.Code = "V0801" // root group is not named "root"
+	V0802 diag.Code = "V0802" // nested group is nil
+	V0803 diag.Code = "V0803" // group name is empty
+	V0804 diag.Code = "V0804" // group name has characters not allowed in a group path
+	V0805 diag.Code = "V0805" // group name is used by a sibling group
+	V0806 diag.Code = "V0806" // group appears in the tree more than once (cycle or shared group)
+	V0807 diag.Code = "V0807" // group variable name is not an identifier
+
+	// Groups: scenario calls.
+	V0808 diag.Code = "V0808" // scenario call has no scenario ID
+	V0809 diag.Code = "V0809" // scenario call refers to an unknown scenario
+	V0810 diag.Code = "V0810" // scenario call alias is not an identifier
+	V0811 diag.Code = "V0811" // scenario call alias is used more than once in the group
+	V0812 diag.Code = "V0812" // scenario call passes an input the scenario does not declare
+	V0813 diag.Code = "V0813" // scenario call renames an output the scenario does not declare
+	V0814 diag.Code = "V0814" // new name of a renamed output is not an identifier
 )

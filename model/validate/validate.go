@@ -27,6 +27,7 @@ func Project(p *model.Project, file string) diag.List {
 	val.validateProject()
 	val.validateRequests()
 	val.validateScenarios()
+	val.validateGroups()
 
 	val.diags.Sort()
 	return val.diags
