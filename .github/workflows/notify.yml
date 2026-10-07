@@ -10,37 +10,41 @@ jobs:
 
   notify:
     runs-on: ubuntu-latest
+    env:
+      TELEGRAM_API_TOKEN: ${{ secrets.TELEGRAM_API_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
     steps:
     - name: telegram_notify_success
       run: |
-        curl -s -X POST "https://api.telegram.org/bot${{ vars.TELEGRAM_API_TOKEN }}/sendMessage" \
-        --data-urlencode "chat_id=${{ vars.TELEGRAM_CHAT_ID }}" \
+        curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_API_TOKEN/sendMessage" \
+        --data-urlencode "chat_id=$TELEGRAM_CHAT_ID" \
         --data-urlencode "text=✅ Успешная сборка
   
-        Репозиторий: $github_repository
-        Ветка: $github.ref_name
-        Коммит: $github_sha
-        👨‍💻 Автор: $github_actor
-        ⏰ Время сборки: ${BUILDING_TIME_TEXT}
+        Репозиторий: $GITHUB_REPOSITORY
+        Ветка: $GITHUB.REF_NAME
+        Коммит: $GITHUB_SHA
+        👨‍💻 Автор: $GITHUB_ACTOR
+        ⏰ Время сборки: 1
   
         🔗 Ссылка на пайплайн:
-        $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/core/actions/runs/$github_run_id" \
+        $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/core/actions/runs/$GITHUB_RUN_ID" \
               --data-urlencode "parse_mode=" \
               --data-urlencode "disable_web_page_preview=true"
 
     - name: telegram_notify_failure
       run: |
-        curl -s -X POST "https://api.telegram.org/bot${{ vars.TELEGRAM_API_TOKEN }}/sendMessage" \
-        --data-urlencode "chat_id=${{ vars.TELEGRAM_CHAT_ID }}" \
+        curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_API_TOKEN/sendMessage" \
+        --data-urlencode "chat_id=$TELEGRAM_CHAT_ID" \
         --data-urlencode "text=❌ При сборке произошла ошибка
   
-        Репозиторий: $github_repository
-        Ветка: $github.ref_name
-        Коммит: $github_sha
-        👨‍💻 Автор: $github_actor
-        ⏰ Время сборки: ${BUILDING_TIME_TEXT}
+        Репозиторий: $GITHUB_REPOSITORY
+        Ветка: $GITHUB.REF_NAME
+        Коммит: $GITHUB_SHA
+        👨‍💻 Автор: $GITHUB_ACTOR
+        ⏰ Время сборки: 1
   
         🔗 Ссылка на пайплайн:
-        $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/core/actions/runs/$github_run_id" \
+        $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/core/actions/runs/$GITHUB_RUN_ID" \
               --data-urlencode "parse_mode=" \
               --data-urlencode "disable_web_page_preview=true"
+      if: ${{ always() && contains(needs.*.result, 'failure') }}
