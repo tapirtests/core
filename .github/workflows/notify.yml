@@ -16,8 +16,8 @@ jobs:
     steps:
     - name: telegram_notify_success
       run: |
-        curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_API_TOKEN/sendMessage" \
-        --data-urlencode "chat_id=$TELEGRAM_CHAT_ID" \
+        curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_API_TOKEN}/sendMessage" \
+        --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
         --data-urlencode "text=✅ Успешная сборка
   
         Репозиторий: $GITHUB_REPOSITORY
@@ -33,8 +33,8 @@ jobs:
 
     - name: telegram_notify_failure
       run: |
-        curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_API_TOKEN/sendMessage" \
-        --data-urlencode "chat_id=$TELEGRAM_CHAT_ID" \
+        curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_API_TOKEN}/sendMessage" \
+        --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
         --data-urlencode "text=❌ При сборке произошла ошибка
   
         Репозиторий: $GITHUB_REPOSITORY
