@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"regexp"
 	"slices"
-	"strings"
 
 	"github.com/tapirtests/core/diag"
+	"github.com/tapirtests/core/extract"
 	"github.com/tapirtests/core/model"
 )
 
@@ -65,6 +65,7 @@ func (v *validator) validateAssertion(a model.Assertion, ptr diag.Pointer) {
 	if opOK {
 		v.validateAssertValue(a.Op, a.Value, ptr.Key("value"))
 	}
+	v.validateTemplates(a.Value, ptr.Key("value"))
 }
 
 func (v *validator) validateAssertTarget(target model.AssertTarget, ptr diag.Pointer) bool {
@@ -104,8 +105,10 @@ func (v *validator) validateAssertPath(target model.AssertTarget, path string, p
 		switch {
 		case path == "":
 			v.errorf(V0730, ptr, "body assertion requires a JSONPath")
-		case !strings.HasPrefix(path, "$"):
-			v.errorf(V0731, ptr, "body assertion path %q must be a JSONPath starting with \"$\"", path)
+		default:
+			if _, err := extract.Parse(path); err != nil {
+				v.errorf(V0731, ptr, "body assertion path %q: %v", path, err)
+			}
 		}
 	case model.TargetHeader:
 		if path == "" {

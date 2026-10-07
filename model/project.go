@@ -18,11 +18,12 @@ type Project struct {
 	Root      *Group                      // root group
 }
 
-// SpecRef points to the snapshot of the API specification the project was
-// built from. The hash lets Tapir detect that the specification changed and
-// show a diff of affected steps.
+// SpecRef tells which API specification the requests were imported from.
+// No separate snapshot of the specification is kept: the imported requests
+// in the project play that role. The hash lets Tapir detect that the
+// specification changed since the import and show a diff of affected steps.
 type SpecRef struct {
-	Type string // specification format: swagger2, later openapi3, ...
-	Path string // path to the specification snapshot, relative to tapir.json
-	Hash string // hash of the snapshot, "sha256:..."
+	Type   string // specification format: swagger2, later openapi3, ...
+	Source string // where the specification was taken from: a path relative to tapir.json or a URL
+	Hash   string // hash of the specification at import time, "sha256:..."
 }

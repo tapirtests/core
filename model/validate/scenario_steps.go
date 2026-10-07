@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/tapirtests/core/diag"
+	"github.com/tapirtests/core/extract"
 	"github.com/tapirtests/core/model"
 )
 
@@ -12,6 +13,11 @@ import (
 func (v *validator) validateRequestCall(c *model.RequestCall, ptr diag.Pointer) {
 	if req, ok := v.lookupRequest(c.RequestID, ptr.Key("requestId")); ok {
 		v.validateCallInputs(c.Inputs, req, ptr.Key("inputs"))
+	}
+	// Templates are checked for every passed input, known to the request or
+	// not: a syntax error is a problem of the step either way.
+	for name, value := range c.Inputs {
+		v.validateTemplates(value, ptr.Key("inputs").Key(name))
 	}
 
 	if c.Timeout < 0 {
@@ -69,11 +75,11 @@ func (v *validator) validateCallInputs(inputs map[string]model.Value, req *model
 }
 
 // validateExtract checks extracted variables: names are identifiers declared
-// in the scenario scope, paths are JSONPath expressions over the response.
-// Whether a path exists in the response schema is checked later, together
-// with templates.
-func (v *validator) validateExtract(extract map[string]string, ptr diag.Pointer) {
-	for name, path := range extract {
+// in the scenario scope, paths are exact JSONPath expressions over the
+// response. Whether a path exists in the response schema is not checked
+// here.
+func (v *validator) validateExtract(paths map[string]string, ptr diag.Pointer) {
+	for name, path := range paths {
 		varPtr := ptr.Key(name)
 		switch {
 		case name == "":
@@ -81,8 +87,9 @@ func (v *validator) validateExtract(extract map[string]string, ptr diag.Pointer)
 		case !identifierPattern.MatchString(name):
 			v.errorf(V0722, varPtr, "extracted variable name %q must match %s", name, identifierPattern)
 		}
-		if !strings.HasPrefix(path, "$") {
-			v.errorf(V0723, varPtr, "extract path %q must be a JSONPath starting with \"$\"", path)
+		v.validateNotReserved(name, varPtr, "extracted variable")
+		if _, err := extract.Parse(path); err != nil {
+			v.errorf(V0723, varPtr, "extract path %q: %v", path, err)
 		}
 	}
 }

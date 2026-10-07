@@ -28,9 +28,9 @@ func ValidProject() *model.Project {
 		Name:          "shop-e2e",
 		BaseURL:       "{{env.BASE_URL}}",
 		Spec: model.SpecRef{
-			Type: "swagger2",
-			Path: "tapir.spec.json",
-			Hash: "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+			Type:   "swagger2",
+			Source: "./openapi.json",
+			Hash:   "sha256:0000000000000000000000000000000000000000000000000000000000000000",
 		},
 		SecuritySchemes: map[string]*model.SecurityScheme{
 			"bearer": {
@@ -118,8 +118,8 @@ func scenarios() map[model.ScenarioID]*model.ScenarioDef {
 			Name:        "Log in",
 			Description: "Log in and return an access token",
 			Inputs: []model.Param{
-				{Name: "username", Required: true},
-				{Name: "password", Required: true},
+				{Name: "username"},
+				{Name: "password"},
 			},
 			Outputs: []model.Output{{Name: "token", Value: "{{token}}"}},
 			Steps: []model.Step{
@@ -140,8 +140,8 @@ func scenarios() map[model.ScenarioID]*model.ScenarioDef {
 			Name:        "Product lifecycle",
 			Description: "Seller creates a product, buyer reads it but cannot delete it, seller deletes it",
 			Inputs: []model.Param{
-				{Name: "sellerToken", Required: true},
-				{Name: "userToken", Required: true},
+				{Name: "sellerToken"},
+				{Name: "userToken"},
 			},
 			Outputs: []model.Output{{Name: "productId", Value: "{{productId}}"}},
 			Steps: []model.Step{
@@ -217,8 +217,8 @@ func scenarios() map[model.ScenarioID]*model.ScenarioDef {
 			Name:        "Clean up a product",
 			Description: "Delete a product if it still exists",
 			Inputs: []model.Param{
-				{Name: "sellerToken", Required: true},
-				{Name: "productId", Required: true},
+				{Name: "sellerToken"},
+				{Name: "productId"},
 			},
 			Steps: []model.Step{
 				&model.RequestCall{

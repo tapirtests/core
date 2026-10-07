@@ -70,9 +70,9 @@ func TestProject(t *testing.T) {
 			want:   []want{{validate.V0301, diag.Error, "/spec/type"}},
 		},
 		{
-			name:   "missing spec path",
-			breaks: func(p *model.Project) { p.Spec.Path = "" },
-			want:   []want{{validate.V0302, diag.Error, "/spec/path"}},
+			name:   "missing spec source",
+			breaks: func(p *model.Project) { p.Spec.Source = "" },
+			want:   []want{{validate.V0302, diag.Error, "/spec/source"}},
 		},
 		{
 			name:   "missing spec hash",
@@ -171,25 +171,27 @@ func TestProject(t *testing.T) {
 			},
 		},
 
-		// Env.
+		// Env. The cases add a variable (index 5) instead of renaming one of
+		// the reference project: those are used in templates, and renaming
+		// them would also report the templates that refer to them.
 		{
 			name:   "missing env name",
-			breaks: func(p *model.Project) { p.Env[0].Name = "" },
-			want:   []want{{validate.V0500, diag.Error, "/env/0/name"}},
+			breaks: func(p *model.Project) { p.Env = append(p.Env, model.EnvVarDecl{Name: ""}) },
+			want:   []want{{validate.V0500, diag.Error, "/env/5/name"}},
 		},
 		{
 			name:   "env name with a dash",
-			breaks: func(p *model.Project) { p.Env[1].Name = "SELLER-USER" },
-			want:   []want{{validate.V0501, diag.Error, "/env/1/name"}},
+			breaks: func(p *model.Project) { p.Env = append(p.Env, model.EnvVarDecl{Name: "API-KEY"}) },
+			want:   []want{{validate.V0501, diag.Error, "/env/5/name"}},
 		},
 		{
 			name:   "env name starting with a digit",
-			breaks: func(p *model.Project) { p.Env[1].Name = "1SELLER" },
-			want:   []want{{validate.V0501, diag.Error, "/env/1/name"}},
+			breaks: func(p *model.Project) { p.Env = append(p.Env, model.EnvVarDecl{Name: "1KEY"}) },
+			want:   []want{{validate.V0501, diag.Error, "/env/5/name"}},
 		},
 		{
 			name:   "lowercase env name is valid",
-			breaks: func(p *model.Project) { p.Env[1].Name = "seller_user" },
+			breaks: func(p *model.Project) { p.Env = append(p.Env, model.EnvVarDecl{Name: "api_key"}) },
 			want:   nil,
 		},
 		{
@@ -212,12 +214,11 @@ func TestProject(t *testing.T) {
 		{
 			name: "empty env names are not reported as duplicates",
 			breaks: func(p *model.Project) {
-				p.Env[0].Name = ""
-				p.Env[1].Name = ""
+				p.Env = append(p.Env, model.EnvVarDecl{Name: ""}, model.EnvVarDecl{Name: ""})
 			},
 			want: []want{
-				{validate.V0500, diag.Error, "/env/0/name"},
-				{validate.V0500, diag.Error, "/env/1/name"},
+				{validate.V0500, diag.Error, "/env/5/name"},
+				{validate.V0500, diag.Error, "/env/6/name"},
 			},
 		},
 

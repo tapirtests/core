@@ -39,9 +39,14 @@ func (v *validator) validateScenarioInputs(inputs []model.Param, ptr diag.Pointe
 		if !v.validateDeclaredName(in.Name, seen, inPtr.Key("name"), V0703, V0704, V0705, "scenario input") {
 			continue
 		}
-		if in.Required && in.Default != nil {
-			v.warnf(V0710, inPtr.Key("default"),
-				"input %q is required, so its default value is never used", in.Name)
+		v.validateNotReserved(in.Name, inPtr.Key("name"), "scenario input")
+		switch {
+		case in.HasDefault:
+			v.validateTemplates(in.Default, inPtr.Key("default"))
+		case in.Default != nil:
+			// Only code can build this; a loaded file sets both together.
+			v.errorf(V0710, inPtr.Key("default"),
+				"input %q has a default value that is not marked as set, so it would be ignored", in.Name)
 		}
 	}
 }
@@ -57,6 +62,7 @@ func (v *validator) validateScenarioOutputs(outputs []model.Output, ptr diag.Poi
 		if out.Value == nil {
 			v.errorf(V0709, outPtr.Key("value"), "output %q has no value", out.Name)
 		}
+		v.validateTemplates(out.Value, outPtr.Key("value"))
 	}
 }
 

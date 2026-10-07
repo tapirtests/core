@@ -39,6 +39,8 @@ type validator struct {
 	p     *model.Project
 	file  string
 	diags diag.List
+
+	envNames map[string]bool // declared env variables; built on first use
 }
 
 func (v *validator) errorf(code diag.Code, ptr diag.Pointer, format string, args ...any) {

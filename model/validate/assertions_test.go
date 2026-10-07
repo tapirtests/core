@@ -117,6 +117,12 @@ func TestAssertions(t *testing.T) {
 			[]want{{validate.V0730, diag.Error, "/path"}}},
 		{"body path without $", model.Assertion{Target: model.TargetBody, Path: "name", Op: model.OpExists},
 			[]want{{validate.V0731, diag.Error, "/path"}}},
+		{"body path with a wildcard", model.Assertion{Target: model.TargetBody, Path: "$.items[*].id", Op: model.OpExists},
+			[]want{{validate.V0731, diag.Error, "/path"}}},
+		{"malformed body path", model.Assertion{Target: model.TargetBody, Path: "$.items[", Op: model.OpExists},
+			[]want{{validate.V0731, diag.Error, "/path"}}},
+		{"body path to the whole body", model.Assertion{Target: model.TargetBody, Path: "$", Op: model.OpExists}, nil},
+		{"body path with index and quoted key", model.Assertion{Target: model.TargetBody, Path: "$.items[0]['first-name']", Op: model.OpExists}, nil},
 		{"header name is not a JSONPath", model.Assertion{Target: model.TargetHeader, Path: "$.Content-Type", Op: model.OpExists}, nil},
 
 		// Value presence.

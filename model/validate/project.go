@@ -36,6 +36,7 @@ func (v *validator) validateProject() {
 	if v.p.BaseURL == "" {
 		v.errorf(V0200, diag.Root.Key("baseUrl"), "base URL is required")
 	}
+	v.validateTemplates(v.p.BaseURL, diag.Root.Key("baseUrl"))
 
 	v.validateSpec()
 	v.validateSecuritySchemes()
@@ -71,8 +72,8 @@ func (v *validator) validateSpec() {
 		v.errorf(V0304, ptr.Key("type"), "unsupported spec type %q, supported: %q",
 			spec.Type, supportedSpecTypes)
 	}
-	if spec.Path == "" {
-		v.errorf(V0302, ptr.Key("path"), "spec path is required when a spec is set")
+	if spec.Source == "" {
+		v.errorf(V0302, ptr.Key("source"), "spec source is required when a spec is set")
 	}
 	if spec.Hash == "" {
 		v.errorf(V0303, ptr.Key("hash"), "spec hash is required when a spec is set")

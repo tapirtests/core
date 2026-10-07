@@ -39,10 +39,18 @@ func (sc ScenarioCall) GetAlias() string {
 }
 
 // Param is one input of a ScenarioDef signature.
+//
+// Every input must get a value. It is taken, in this order, from the inputs
+// of the scenario call, from the group scope (a variable with the same name)
+// and from Default; there is no notion of an optional input without a value.
 type Param struct {
-	Name        string // variable name inside the scenario scope
-	Required    bool   // a call must provide this input, directly or from the group scope
-	Default     Value  // value used when the input is not provided; nil means no default
+	Name string // variable name inside the scenario scope
+	// HasDefault tells whether Default is set. An input without a default
+	// must get a value from the call or from the group scope, otherwise the
+	// scenario fails before its first step. It is a separate flag because
+	// null is a valid default and differs from "no default".
+	HasDefault  bool
+	Default     Value  // value used when the input is not provided; may be a template or null
 	Description string // description
 }
 

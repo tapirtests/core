@@ -16,6 +16,7 @@ import "github.com/tapirtests/core/diag"
 //	V06xx  requests
 //	V07xx  scenarios
 //	V08xx  groups
+//	V09xx  templates and variable names
 //
 // A code is published once and never reused or renumbered: UIs, docs and
 // user filters depend on it. Other components use their own letters:
@@ -34,7 +35,7 @@ const (
 	// Spec. The spec is optional (a project may consist of custom requests
 	// only), but if any of its fields is set, all of them must be set.
 	V0301 diag.Code = "V0301" // spec.type is empty while other spec fields are set
-	V0302 diag.Code = "V0302" // spec.path is empty while other spec fields are set
+	V0302 diag.Code = "V0302" // spec.source is empty while other spec fields are set
 	V0303 diag.Code = "V0303" // spec.hash is empty while other spec fields are set
 	V0304 diag.Code = "V0304" // spec.type is not supported
 
@@ -96,7 +97,7 @@ const (
 	V0707 diag.Code = "V0707" // scenario output name is not an identifier
 	V0708 diag.Code = "V0708" // scenario output is declared more than once
 	V0709 diag.Code = "V0709" // scenario output has no value
-	V0710 diag.Code = "V0710" // required scenario input has a default that is never used (warning)
+	V0710 diag.Code = "V0710" // scenario input has a default value that is not marked as set
 
 	// Scenarios: steps.
 	V0711 diag.Code = "V0711" // scenario has no steps (warning)
@@ -113,7 +114,7 @@ const (
 	V0720 diag.Code = "V0720" // request call timeout is negative
 	V0721 diag.Code = "V0721" // extracted variable name is empty
 	V0722 diag.Code = "V0722" // extracted variable name is not an identifier
-	V0723 diag.Code = "V0723" // extract path does not start with "$"
+	V0723 diag.Code = "V0723" // extract path is not an exact JSONPath
 
 	// Scenarios: assertions.
 	V0724 diag.Code = "V0724" // assertion target is empty
@@ -123,7 +124,7 @@ const (
 	V0728 diag.Code = "V0728" // assertion operator is not applicable to its target
 	V0729 diag.Code = "V0729" // assertion path must be empty for status and duration
 	V0730 diag.Code = "V0730" // assertion path is required for body and header
-	V0731 diag.Code = "V0731" // body assertion path does not start with "$"
+	V0731 diag.Code = "V0731" // body assertion path is not an exact JSONPath
 	V0732 diag.Code = "V0732" // assertion operator requires a value
 	V0733 diag.Code = "V0733" // assertion value is ignored by exists/notExists (warning)
 	V0734 diag.Code = "V0734" // "in" requires an array value
@@ -148,4 +149,11 @@ const (
 	V0812 diag.Code = "V0812" // scenario call passes an input the scenario does not declare
 	V0813 diag.Code = "V0813" // scenario call renames an output the scenario does not declare
 	V0814 diag.Code = "V0814" // new name of a renamed output is not an identifier
+	V0815 diag.Code = "V0815" // variable name clashes with a call alias in the same group
+
+	// Templates and variable names.
+	V0900 diag.Code = "V0900" // template has a syntax error
+	V0901 diag.Code = "V0901" // call of a random.* function is invalid
+	V0902 diag.Code = "V0902" // template refers to an env variable the project does not declare
+	V0903 diag.Code = "V0903" // variable name is reserved by the template language (env, random)
 )

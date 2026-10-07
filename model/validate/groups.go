@@ -29,19 +29,32 @@ func (v *validator) validateGroups() {
 // by mistake. Such a group is reported and not entered again, which also
 // keeps the walk from looping forever.
 func (v *validator) validateGroup(g *model.Group, ptr diag.Pointer, visited map[*model.Group]bool) {
-	for name := range g.Vars {
-		if !identifierPattern.MatchString(name) {
-			v.errorf(V0807, ptr.Key("vars").Key(name), "group variable name %q must match %s",
-				name, identifierPattern)
-		}
-	}
-
 	// Setup, Main and TearDown write to the same group scope, so aliases
 	// must be unique across all three sections.
-	aliases := make(map[string]bool)
-	v.validateCalls(g.Setup, ptr.Key("setup"), aliases)
-	v.validateCalls(g.Main.Scenarios, ptr.Key("main").Key("scenarios"), aliases)
-	v.validateCalls(g.TearDown, ptr.Key("tearDown"), aliases)
+	names := &groupNames{aliases: make(map[string]bool)}
+	v.validateCalls(g.Setup, ptr.Key("setup"), names)
+	v.validateCalls(g.Main.Scenarios, ptr.Key("main").Key("scenarios"), names)
+	v.validateCalls(g.TearDown, ptr.Key("tearDown"), names)
+
+	for name, value := range g.Vars {
+		varPtr := ptr.Key("vars").Key(name)
+		if !identifierPattern.MatchString(name) {
+			v.errorf(V0807, varPtr, "group variable name %q must match %s", name, identifierPattern)
+		}
+		v.validateNotReserved(name, varPtr, "group variable")
+		v.validateTemplates(value, varPtr)
+		names.variables = append(names.variables, declaredVar{name, varPtr})
+	}
+
+	// Outputs of a call are stored in the group scope as an object named by
+	// the alias, so a plain variable with the same name and the alias would
+	// overwrite each other.
+	for _, variable := range names.variables {
+		if names.aliases[variable.name] {
+			v.errorf(V0815, variable.ptr,
+				"variable %q clashes with the alias of a scenario call in this group", variable.name)
+		}
+	}
 
 	siblings := make(map[string]bool, len(g.Main.Groups))
 	for i, child := range g.Main.Groups {
@@ -79,11 +92,24 @@ func (v *validator) validateGroupName(name string, siblings map[string]bool, ptr
 	siblings[name] = true
 }
 
-// validateCalls checks the scenario calls of one group section. aliases is
+// groupNames collects the names that end up in the scope of one group, to
+// find clashes between them once all sections were checked.
+type groupNames struct {
+	aliases   map[string]bool // effective aliases of scenario calls
+	variables []declaredVar   // group variables and renamed outputs
+}
+
+// declaredVar is a plain variable of a group scope and where it is declared.
+type declaredVar struct {
+	name string
+	ptr  diag.Pointer
+}
+
+// validateCalls checks the scenario calls of one group section. names is
 // shared by all sections of the group.
-func (v *validator) validateCalls(calls []model.ScenarioCall, ptr diag.Pointer, aliases map[string]bool) {
+func (v *validator) validateCalls(calls []model.ScenarioCall, ptr diag.Pointer, names *groupNames) {
 	for i, c := range calls {
-		v.validateCall(c, ptr.Index(i), aliases)
+		v.validateCall(c, ptr.Index(i), names)
 	}
 }
 
@@ -92,8 +118,21 @@ func (v *validator) validateCalls(calls []model.ScenarioCall, ptr diag.Pointer, 
 //
 // Required inputs that are not passed are not reported here: they may come
 // from the group scope, which is known only after analyzing the whole tree.
-func (v *validator) validateCall(c model.ScenarioCall, ptr diag.Pointer, aliases map[string]bool) {
-	v.validateAlias(c, ptr.Key("alias"), aliases)
+func (v *validator) validateCall(c model.ScenarioCall, ptr diag.Pointer, names *groupNames) {
+	v.validateAlias(c, ptr.Key("alias"), names.aliases)
+
+	// Names and templates are checked whether the scenario exists or not.
+	for name, value := range c.Inputs {
+		v.validateTemplates(value, ptr.Key("inputs").Key(name))
+	}
+	for output, newName := range c.Outputs {
+		outPtr := ptr.Key("outputs").Key(output)
+		if !identifierPattern.MatchString(newName) {
+			v.errorf(V0814, outPtr, "new name %q of output %q must match %s", newName, output, identifierPattern)
+		}
+		v.validateNotReserved(newName, outPtr, "variable")
+		names.variables = append(names.variables, declaredVar{newName, outPtr})
+	}
 
 	sc, ok := v.lookupScenario(c.ScenarioID, ptr.Key("scenarioId"))
 	if !ok {
@@ -114,13 +153,9 @@ func (v *validator) validateCall(c model.ScenarioCall, ptr diag.Pointer, aliases
 	for _, out := range sc.Outputs {
 		outputs[out.Name] = true
 	}
-	for output, newName := range c.Outputs {
-		outPtr := ptr.Key("outputs").Key(output)
+	for output := range c.Outputs {
 		if !outputs[output] {
-			v.errorf(V0813, outPtr, "scenario %q has no output %q", sc.ID, output)
-		}
-		if !identifierPattern.MatchString(newName) {
-			v.errorf(V0814, outPtr, "new name %q of output %q must match %s", newName, output, identifierPattern)
+			v.errorf(V0813, ptr.Key("outputs").Key(output), "scenario %q has no output %q", sc.ID, output)
 		}
 	}
 }
@@ -137,6 +172,7 @@ func (v *validator) validateAlias(c model.ScenarioCall, ptr diag.Pointer, aliase
 	if alias == "" {
 		return // no scenario ID either; reported with the reference
 	}
+	v.validateNotReserved(alias, ptr, "alias")
 	if aliases[alias] {
 		v.errorf(V0811, ptr, "alias %q is already used in the group; set a distinct alias", alias)
 	}

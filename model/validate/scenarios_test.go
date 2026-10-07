@@ -17,7 +17,7 @@ const probeScenarioKey = "probeScenario"
 // of groups do not add diagnostics to these cases. It uses the requests of
 // the reference project.
 //
-// Inputs:  0 token (required), 1 name (optional, default "Phone").
+// Inputs:  0 token (no default: must be passed), 1 name (default "Phone").
 // Outputs: 0 productId.
 // Steps:
 //
@@ -28,8 +28,8 @@ func probeScenario() *model.ScenarioDef {
 		ID:   probeScenarioKey,
 		Name: "Probe",
 		Inputs: []model.Param{
-			{Name: "token", Required: true},
-			{Name: "name", Default: "Phone"},
+			{Name: "token"},
+			{Name: "name", HasDefault: true, Default: "Phone"},
 		},
 		Outputs: []model.Output{{Name: "productId", Value: "{{productId}}"}},
 		Steps: []model.Step{
@@ -147,16 +147,24 @@ func TestScenarios(t *testing.T) {
 			want: []want{{validate.V0705, diag.Error, "/scenarios/probeScenario/inputs/2/name"}},
 		},
 		{
-			name:   "required input with a default",
-			breaks: withScenario(func(s *model.ScenarioDef) { s.Inputs[0].Default = "x" }),
-			want:   []want{{validate.V0710, diag.Warning, "/scenarios/probeScenario/inputs/0/default"}},
+			// Null is a valid default and differs from "no default".
+			name: "null default is valid",
+			breaks: withScenario(func(s *model.ScenarioDef) {
+				s.Inputs[1] = model.Param{Name: "name", HasDefault: true, Default: nil}
+			}),
+			want: nil,
 		},
 		{
-			// The default check is skipped for a duplicate: it would only
-			// repeat a problem of the declaration.
-			name: "duplicate required input with a default",
+			name:   "default value that is not marked as set",
+			breaks: withScenario(func(s *model.ScenarioDef) { s.Inputs[0].Default = "x" }),
+			want:   []want{{validate.V0710, diag.Error, "/scenarios/probeScenario/inputs/0/default"}},
+		},
+		{
+			// The default is not checked for a duplicate: it would only add
+			// to a problem of the declaration.
+			name: "duplicate input with a broken default",
 			breaks: withScenario(func(s *model.ScenarioDef) {
-				s.Inputs = append(s.Inputs, model.Param{Name: "token", Required: true, Default: "x"})
+				s.Inputs = append(s.Inputs, model.Param{Name: "token", Default: "x"})
 			}),
 			want: []want{{validate.V0705, diag.Error, "/scenarios/probeScenario/inputs/2/name"}},
 		},

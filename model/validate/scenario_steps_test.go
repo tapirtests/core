@@ -159,6 +159,35 @@ func TestRequestCallSteps(t *testing.T) {
 			want:   []want{{validate.V0723, diag.Error, step0 + "/extract/productId"}},
 		},
 		{
+			name:   "extract path with a wildcard",
+			breaks: withScenario(func(s *model.ScenarioDef) { call(s, 0).Extract["ids"] = "$.body.items[*].id" }),
+			want:   []want{{validate.V0723, diag.Error, step0 + "/extract/ids"}},
+		},
+		{
+			name: "extract path with a filter",
+			breaks: withScenario(func(s *model.ScenarioDef) {
+				call(s, 0).Extract["cheap"] = "$.body.items[?(@.price < 10)]"
+			}),
+			want: []want{{validate.V0723, diag.Error, step0 + "/extract/cheap"}},
+		},
+		{
+			name:   "malformed extract path",
+			breaks: withScenario(func(s *model.ScenarioDef) { call(s, 0).Extract["productId"] = "$.body.items[" }),
+			want:   []want{{validate.V0723, diag.Error, step0 + "/extract/productId"}},
+		},
+		{
+			name: "exact extract paths of every form",
+			breaks: withScenario(func(s *model.ScenarioDef) {
+				ex := call(s, 0).Extract
+				ex["status"] = "$.status"
+				ex["requestId"] = "$.headers['X-Request-Id']"
+				ex["firstTag"] = "$.body.tags[0]"
+				ex["lastTag"] = "$.body.tags[-1]"
+				ex["whole"] = "$.body"
+			}),
+			want: nil,
+		},
+		{
 			name: "invalid name and path are both reported",
 			breaks: withScenario(func(s *model.ScenarioDef) {
 				call(s, 0).Extract["product-id"] = "body.id"
