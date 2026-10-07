@@ -14,6 +14,11 @@ jobs:
       TELEGRAM_API_TOKEN: ${{ secrets.TELEGRAM_API_TOKEN }}
       TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
     steps:
+    - name: debug
+      run: |
+        echo "Длина токена: ${#TELEGRAM_API_TOKEN}"
+        echo "Длина chat_id: ${#TELEGRAM_CHAT_ID}"
+        curl -s "https://api.telegram.org/bot${TELEGRAM_API_TOKEN}/getMe"
     - name: telegram_notify_success
       run: |
         curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_API_TOKEN}/sendMessage" \
