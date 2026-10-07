@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       TELEGRAM_API_TOKEN: ${{ secrets.TELEGRAM_API_TOKEN }}
-      TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
     steps:
     - name: telegram_notify_success
       run: |
@@ -21,13 +21,13 @@ jobs:
         --data-urlencode "text=✅ Успешная сборка
   
         Репозиторий: $GITHUB_REPOSITORY
-        Ветка: $GITHUB.REF_NAME
+        Ветка: $GITHUB_REF_NAME
         Коммит: $GITHUB_SHA
         👨‍💻 Автор: $GITHUB_ACTOR
         ⏰ Время сборки: 1
   
         🔗 Ссылка на пайплайн:
-        $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/core/actions/runs/$GITHUB_RUN_ID" \
+        $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
               --data-urlencode "parse_mode=" \
               --data-urlencode "disable_web_page_preview=true"
 
@@ -38,13 +38,13 @@ jobs:
         --data-urlencode "text=❌ При сборке произошла ошибка
   
         Репозиторий: $GITHUB_REPOSITORY
-        Ветка: $GITHUB.REF_NAME
+        Ветка: $GITHUB_REF_NAME
         Коммит: $GITHUB_SHA
         👨‍💻 Автор: $GITHUB_ACTOR
         ⏰ Время сборки: 1
   
         🔗 Ссылка на пайплайн:
-        $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/core/actions/runs/$GITHUB_RUN_ID" \
+        $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
               --data-urlencode "parse_mode=" \
               --data-urlencode "disable_web_page_preview=true"
       if: ${{ always() && contains(needs.*.result, 'failure') }}
