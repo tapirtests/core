@@ -28,7 +28,7 @@ jobs:
         👨‍💻 Автор: $GITHUB_ACTOR
         ⏰ Время сборки: 1
   
-        [🔗 Ссылка на пайплайн]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID") \
+        [🔗 Ссылка на пайплайн]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)" \
               --data-urlencode "parse_mode=" \
               --data-urlencode "disable_web_page_preview=true"
 
@@ -45,7 +45,7 @@ jobs:
         👨‍💻 Автор: $GITHUB_ACTOR
         ⏰ Время сборки: 1
   
-        [🔗 Ссылка на пайплайн]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID") \
+        [🔗 Ссылка на пайплайн]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)" \
               --data-urlencode "parse_mode=" \
               --data-urlencode "disable_web_page_preview=true"
       if: ${{ always() && contains(needs.*.result, 'failure') }}
