@@ -10,57 +10,49 @@ import (
 	"github.com/tapirtests/core/model"
 )
 
-// opsByTarget lists the operators applicable to each assertion target.
-// Its keys are the supported targets.
-var opsByTarget = map[model.AssertTarget][]model.AssertOp{
-	model.TargetStatus: {
-		model.OpEquals, model.OpNotEquals, model.OpIn,
-		model.OpLt, model.OpLte, model.OpGt, model.OpGte,
-	},
-	model.TargetDuration: {
-		model.OpLt, model.OpLte, model.OpGt, model.OpGte,
-	},
-	model.TargetHeader: {
-		model.OpEquals, model.OpNotEquals, model.OpIn,
-		model.OpExists, model.OpNotExists, model.OpContains, model.OpMatches,
-	},
-	model.TargetBody: {
-		model.OpEquals, model.OpNotEquals, model.OpIn,
-		model.OpExists, model.OpNotExists, model.OpContains, model.OpMatches,
-		model.OpLt, model.OpLte, model.OpGt, model.OpGte, model.OpLength,
-	},
-}
-
-// supportedTargets and supportedOps are listed in messages, in a stable order.
+// Operators applicable to the parts of the response whose type is known in
+// advance. A value inside the body may be of any type, so every operator is
+// applicable to it.
 var (
-	supportedTargets = []model.AssertTarget{
-		model.TargetStatus, model.TargetBody, model.TargetHeader, model.TargetDuration,
+	// statusOps apply to $.status, a number.
+	statusOps = []model.AssertOp{
+		model.OpEquals, model.OpNotEquals, model.OpIn,
+		model.OpLt, model.OpLte, model.OpGt, model.OpGte,
 	}
-	supportedOps = []model.AssertOp{
-		model.OpEquals, model.OpNotEquals, model.OpIn, model.OpExists, model.OpNotExists,
-		model.OpContains, model.OpMatches, model.OpLt, model.OpLte, model.OpGt, model.OpGte, model.OpLength,
+	// durationOps apply to $.duration, a number that is never equal to
+	// anything predictable.
+	durationOps = []model.AssertOp{model.OpLt, model.OpLte, model.OpGt, model.OpGte}
+	// headerOps apply to a header, a string that may be absent.
+	headerOps = []model.AssertOp{
+		model.OpEquals, model.OpNotEquals, model.OpIn,
+		model.OpExists, model.OpNotExists, model.OpContains, model.OpMatches,
 	}
 )
+
+// supportedOps are listed in messages, in a stable order.
+var supportedOps = []model.AssertOp{
+	model.OpEquals, model.OpNotEquals, model.OpIn, model.OpExists, model.OpNotExists,
+	model.OpContains, model.OpMatches, model.OpLt, model.OpLte, model.OpGt, model.OpGte, model.OpLength,
+}
 
 // numericOps compare the actual value with a number.
 var numericOps = []model.AssertOp{model.OpLt, model.OpLte, model.OpGt, model.OpGte, model.OpLength}
 
-// validateAssertion checks one assertion of a request call: the target, the
-// operator and whether they fit together, the path and the expected value.
+// validateAssertion checks one assertion of a request call: the path, the
+// operator, whether the operator fits what the path points to, and the
+// expected value.
 //
 // Values that are templates ("{{allowed}}") are not type-checked: their type
 // is known only at run time. A nil value is a valid expectation for equals
 // and notEquals (the actual value is null).
 func (v *validator) validateAssertion(a model.Assertion, ptr diag.Pointer) {
-	targetOK := v.validateAssertTarget(a.Target, ptr.Key("target"))
+	path := v.validateAssertPath(a.Path, ptr.Key("path"))
 	opOK := v.validateAssertOp(a.Op, ptr.Key("op"))
 
-	if targetOK && opOK && !slices.Contains(opsByTarget[a.Target], a.Op) {
-		v.errorf(V0728, ptr.Key("op"), "operator %q is not applicable to %q, applicable: %q",
-			a.Op, a.Target, opsByTarget[a.Target])
-	}
-	if targetOK {
-		v.validateAssertPath(a.Target, a.Path, ptr.Key("path"))
+	if path != nil && opOK {
+		if what, ops := applicableOps(path); ops != nil && !slices.Contains(ops, a.Op) {
+			v.errorf(V0728, ptr.Key("op"), "operator %q is not applicable to %s, applicable: %q", a.Op, what, ops)
+		}
 	}
 	if opOK {
 		v.validateAssertValue(a.Op, a.Value, ptr.Key("value"))
@@ -68,16 +60,46 @@ func (v *validator) validateAssertion(a model.Assertion, ptr diag.Pointer) {
 	v.validateTemplates(a.Value, ptr.Key("value"))
 }
 
-func (v *validator) validateAssertTarget(target model.AssertTarget, ptr diag.Pointer) bool {
-	switch _, known := opsByTarget[target]; {
-	case target == "":
-		v.errorf(V0724, ptr, "assertion target is required")
-	case !known:
-		v.errorf(V0725, ptr, "unsupported assertion target %q, supported: %q", target, supportedTargets)
-	default:
-		return true
+// validateAssertPath checks the path of an assertion and returns it parsed,
+// or nil if it is unusable. An assertion checks something inside the
+// response, so unlike extraction it cannot point to the response as a whole.
+func (v *validator) validateAssertPath(path string, ptr diag.Pointer) *extract.Path {
+	if path == "" {
+		v.errorf(V0730, ptr, "assertion path is required, e.g. $.status or $.body.id")
+		return nil
 	}
-	return false
+	p, err := extract.Parse(path)
+	if err != nil {
+		v.errorf(V0731, ptr, "assertion path %q: %v", path, err)
+		return nil
+	}
+	if len(p.Steps()) == 0 {
+		v.errorf(V0725, ptr, "assertion path %q points to the whole response; it must start with one of %s",
+			path, responseParts())
+		return nil
+	}
+	if !v.validateResponsePath(p, path, ptr) {
+		return nil
+	}
+	return p
+}
+
+// applicableOps returns the operators applicable to what the path points to
+// and a name of that thing for messages. ops is nil when any operator is
+// applicable.
+func applicableOps(p *extract.Path) (what string, ops []model.AssertOp) {
+	steps := p.Steps()
+	switch p.Part() {
+	case extract.PartStatus:
+		return "the status", statusOps
+	case extract.PartDuration:
+		return "the duration", durationOps
+	case extract.PartHeaders:
+		if len(steps) == 2 {
+			return "a header", headerOps
+		}
+	}
+	return "", nil
 }
 
 func (v *validator) validateAssertOp(op model.AssertOp, ptr diag.Pointer) bool {
@@ -90,31 +112,6 @@ func (v *validator) validateAssertOp(op model.AssertOp, ptr diag.Pointer) bool {
 		return true
 	}
 	return false
-}
-
-// validateAssertPath checks the path against the target: status and
-// duration have no path, a header is selected by name, a body value by a
-// JSONPath expression.
-func (v *validator) validateAssertPath(target model.AssertTarget, path string, ptr diag.Pointer) {
-	switch target {
-	case model.TargetStatus, model.TargetDuration:
-		if path != "" {
-			v.errorf(V0729, ptr, "%q assertion has no path, got %q", target, path)
-		}
-	case model.TargetBody:
-		switch {
-		case path == "":
-			v.errorf(V0730, ptr, "body assertion requires a JSONPath")
-		default:
-			if _, err := extract.Parse(path); err != nil {
-				v.errorf(V0731, ptr, "body assertion path %q: %v", path, err)
-			}
-		}
-	case model.TargetHeader:
-		if path == "" {
-			v.errorf(V0730, ptr, "header assertion requires a header name")
-		}
-	}
 }
 
 // validateAssertValue checks the expected value against the operator.

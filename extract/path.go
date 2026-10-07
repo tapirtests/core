@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/theory/jsonpath"
+	"github.com/theory/jsonpath/spec"
 )
 
 // ErrNotExact is returned by Parse for a valid JSONPath that may select more
@@ -48,6 +49,43 @@ func (p *Path) Get(doc any) (value any, ok bool) {
 		return nil, false
 	}
 	return nodes[0], true
+}
+
+// Step is one step of an exact path: a field of an object or an index of an
+// array.
+type Step struct {
+	Field   string // object key; used when IsIndex is false
+	Index   int    // array index, negative counts from the end; used when IsIndex is true
+	IsIndex bool
+}
+
+// Steps returns the steps of the path from the root: "$.body.items[0]" is
+// body, items, 0. The root path "$" has no steps.
+func (p *Path) Steps() []Step {
+	segments := p.path.Query().Segments()
+	steps := make([]Step, 0, len(segments))
+	for _, seg := range segments {
+		// An exact path has exactly one selector per segment, a name or an
+		// index; Parse rejects everything else.
+		switch sel := seg.Selectors()[0].(type) {
+		case spec.Name:
+			steps = append(steps, Step{Field: string(sel)})
+		case spec.Index:
+			steps = append(steps, Step{Index: int(sel), IsIndex: true})
+		}
+	}
+	return steps
+}
+
+// Part returns the part of the response document the path leads into, one of
+// Parts, i.e. the first field of the path. It is empty for the root path "$"
+// and for a path that does not start with a field.
+func (p *Path) Part() string {
+	steps := p.Steps()
+	if len(steps) == 0 || steps[0].IsIndex {
+		return ""
+	}
+	return steps[0].Field
 }
 
 // String returns the path in the normalized form of RFC 9535:

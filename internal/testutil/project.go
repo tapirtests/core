@@ -156,7 +156,7 @@ func scenarios() map[model.ScenarioID]*model.ScenarioDef {
 					Extract: map[string]string{"productId": "$.body.id"},
 					Expect: []model.Assertion{
 						status(201),
-						{Target: model.TargetBody, Path: "$.name", Op: model.OpEquals, Value: "Phone"},
+						{Path: "$.body.name", Op: model.OpEquals, Value: "Phone"},
 					},
 				},
 				&model.RequestCall{
@@ -168,8 +168,8 @@ func scenarios() map[model.ScenarioID]*model.ScenarioDef {
 					},
 					Expect: []model.Assertion{
 						status(200),
-						{Target: model.TargetBody, Path: "$.id", Op: model.OpEquals, Value: "{{productId}}"},
-						{Target: model.TargetDuration, Op: model.OpLt, Value: json.Number("500")},
+						{Path: "$.body.id", Op: model.OpEquals, Value: "{{productId}}"},
+						{Path: "$.duration", Op: model.OpLt, Value: json.Number("500")},
 					},
 				},
 				&model.RequestCall{
@@ -207,7 +207,7 @@ func scenarios() map[model.ScenarioID]*model.ScenarioDef {
 					},
 					Expect: []model.Assertion{
 						status(401),
-						{Target: model.TargetBody, Path: "$.message", Op: model.OpExists},
+						{Path: "$.body.message", Op: model.OpExists},
 					},
 				},
 			},
@@ -229,7 +229,7 @@ func scenarios() map[model.ScenarioID]*model.ScenarioDef {
 						"path.id":     "{{productId}}",
 					},
 					Expect: []model.Assertion{
-						{Target: model.TargetStatus, Op: model.OpIn, Value: []any{json.Number("204"), json.Number("404")}},
+						{Path: "$.status", Op: model.OpIn, Value: []any{json.Number("204"), json.Number("404")}},
 					},
 				},
 			},
@@ -286,9 +286,9 @@ func root() *model.Group {
 
 func status(code int) model.Assertion {
 	return model.Assertion{
-		Target: model.TargetStatus,
-		Op:     model.OpEquals,
-		Value:  json.Number(strconv.Itoa(code)),
+		Path:  "$.status",
+		Op:    model.OpEquals,
+		Value: json.Number(strconv.Itoa(code)),
 	}
 }
 

@@ -75,9 +75,9 @@ func (v *validator) validateCallInputs(inputs map[string]model.Value, req *model
 }
 
 // validateExtract checks extracted variables: names are identifiers declared
-// in the scenario scope, paths are exact JSONPath expressions over the
-// response. Whether a path exists in the response schema is not checked
-// here.
+// in the scenario scope, paths are exact JSONPath expressions from the root
+// of the response document. Whether a path exists in the response schema is
+// not checked here.
 func (v *validator) validateExtract(paths map[string]string, ptr diag.Pointer) {
 	for name, path := range paths {
 		varPtr := ptr.Key(name)
@@ -88,8 +88,10 @@ func (v *validator) validateExtract(paths map[string]string, ptr diag.Pointer) {
 			v.errorf(V0722, varPtr, "extracted variable name %q must match %s", name, identifierPattern)
 		}
 		v.validateNotReserved(name, varPtr, "extracted variable")
-		if _, err := extract.Parse(path); err != nil {
+		if p, err := extract.Parse(path); err != nil {
 			v.errorf(V0723, varPtr, "extract path %q: %v", path, err)
+		} else {
+			v.validateResponsePath(p, path, varPtr)
 		}
 	}
 }

@@ -116,15 +116,17 @@ const (
 	V0722 diag.Code = "V0722" // extracted variable name is not an identifier
 	V0723 diag.Code = "V0723" // extract path is not an exact JSONPath
 
+	// Scenarios: paths into the response, in extraction and in assertions.
+	V0725 diag.Code = "V0725" // path does not start with a part of the response ($.status, $.headers, $.body, $.duration)
+	V0729 diag.Code = "V0729" // path goes inside a value that has no parts: the status, the duration, a header
+	V0737 diag.Code = "V0737" // header name in a path has upper-case letters (warning)
+
 	// Scenarios: assertions.
-	V0724 diag.Code = "V0724" // assertion target is empty
-	V0725 diag.Code = "V0725" // assertion target is not supported
 	V0726 diag.Code = "V0726" // assertion operator is empty
 	V0727 diag.Code = "V0727" // assertion operator is not supported
-	V0728 diag.Code = "V0728" // assertion operator is not applicable to its target
-	V0729 diag.Code = "V0729" // assertion path must be empty for status and duration
-	V0730 diag.Code = "V0730" // assertion path is required for body and header
-	V0731 diag.Code = "V0731" // body assertion path is not an exact JSONPath
+	V0728 diag.Code = "V0728" // assertion operator is not applicable to what the path points to
+	V0730 diag.Code = "V0730" // assertion path is empty
+	V0731 diag.Code = "V0731" // assertion path is not an exact JSONPath
 	V0732 diag.Code = "V0732" // assertion operator requires a value
 	V0733 diag.Code = "V0733" // assertion value is ignored by exists/notExists (warning)
 	V0734 diag.Code = "V0734" // "in" requires an array value

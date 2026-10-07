@@ -1,30 +1,23 @@
 package model
 
-// Assertion is a single check of a request result, written in a RequestCall:
-// "status equals 201", "$.body.name equals Phone", "duration lt 500".
+// Assertion is a single check of a response, written in a RequestCall:
+// "$.status equals 201", "$.body.name equals Phone", "$.duration lt 500".
+//
+// What is checked is selected by Path, an exact JSONPath from the root of the
+// response document, the same document extraction works on:
+//
+//	$.status                     the status of the response
+//	$.headers['content-type']    a response header (names are lower-case)
+//	$.body.items[0].name         a value in the response body
+//	$.duration                   the duration of the call in milliseconds
 //
 // The expected result is part of a usage, not of a definition: the same
 // request may be expected to return 200 in one scenario and 404 in another.
 type Assertion struct {
-	Target AssertTarget // what part of the result is checked: status, body, header, duration
-	Path   string       // JSONPath for body, header name for header, empty for status and duration
-	Op     AssertOp     // comparison operator: equals, notEquals, in, exists, contains, matches, ...
-	Value  Value        // expected value; may contain templates, e.g. "{{petName}}"; unused by exists/notExists
+	Path  string   // exact JSONPath from the root of the response document
+	Op    AssertOp // comparison operator: equals, notEquals, in, exists, contains, matches, ...
+	Value Value    // expected value; may contain templates, e.g. "{{petName}}"; unused by exists/notExists
 }
-
-// AssertTarget is the part of a request result an Assertion checks.
-type AssertTarget string
-
-const (
-	// TargetStatus checks the status of the result (HTTP status code). Path is empty.
-	TargetStatus AssertTarget = "status"
-	// TargetBody checks a value in the response body selected by the JSONPath in Path.
-	TargetBody AssertTarget = "body"
-	// TargetHeader checks the response header named in Path.
-	TargetHeader AssertTarget = "header"
-	// TargetDuration checks the request duration in milliseconds. Path is empty.
-	TargetDuration AssertTarget = "duration"
-)
 
 // AssertOp is the comparison operator of an Assertion.
 type AssertOp string

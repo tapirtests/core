@@ -43,8 +43,8 @@ func probeScenario() *model.ScenarioDef {
 				},
 				Extract: map[string]string{"productId": "$.body.id"},
 				Expect: []model.Assertion{
-					{Target: model.TargetStatus, Op: model.OpEquals, Value: json.Number("201")},
-					{Target: model.TargetBody, Path: "$.name", Op: model.OpEquals, Value: "{{name}}"},
+					{Path: "$.status", Op: model.OpEquals, Value: json.Number("201")},
+					{Path: "$.body.name", Op: model.OpEquals, Value: "{{name}}"},
 				},
 			},
 			&model.RequestCall{
@@ -55,10 +55,10 @@ func probeScenario() *model.ScenarioDef {
 					"path.id":     "{{productId}}",
 				},
 				Expect: []model.Assertion{
-					{Target: model.TargetStatus, Op: model.OpIn, Value: []any{json.Number("401"), json.Number("403")}},
-					{Target: model.TargetHeader, Path: "Content-Type", Op: model.OpMatches, Value: "json"},
-					{Target: model.TargetDuration, Op: model.OpLt, Value: json.Number("1000")},
-					{Target: model.TargetBody, Path: "$.message", Op: model.OpExists},
+					{Path: "$.status", Op: model.OpIn, Value: []any{json.Number("401"), json.Number("403")}},
+					{Path: "$.headers['content-type']", Op: model.OpMatches, Value: "json"},
+					{Path: "$.duration", Op: model.OpLt, Value: json.Number("1000")},
+					{Path: "$.body.message", Op: model.OpExists},
 				},
 			},
 		},

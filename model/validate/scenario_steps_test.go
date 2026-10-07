@@ -180,12 +180,38 @@ func TestRequestCallSteps(t *testing.T) {
 			breaks: withScenario(func(s *model.ScenarioDef) {
 				ex := call(s, 0).Extract
 				ex["status"] = "$.status"
-				ex["requestId"] = "$.headers['X-Request-Id']"
+				ex["requestId"] = "$.headers['x-request-id']"
+				ex["headers"] = "$.headers"
+				ex["duration"] = "$.duration"
+				ex["response"] = "$"
 				ex["firstTag"] = "$.body.tags[0]"
 				ex["lastTag"] = "$.body.tags[-1]"
 				ex["whole"] = "$.body"
 			}),
 			want: nil,
+		},
+		{
+			// A path that is valid JSONPath but can never point to anything.
+			name:   "extract path to an unknown part of the response",
+			breaks: withScenario(func(s *model.ScenarioDef) { call(s, 0).Extract["productId"] = "$.data.id" }),
+			want:   []want{{validate.V0725, diag.Error, step0 + "/extract/productId"}},
+		},
+		{
+			name:   "extract path from the body, not from the response",
+			breaks: withScenario(func(s *model.ScenarioDef) { call(s, 0).Extract["productId"] = "$.id" }),
+			want:   []want{{validate.V0725, diag.Error, step0 + "/extract/productId"}},
+		},
+		{
+			name:   "extract path inside the status",
+			breaks: withScenario(func(s *model.ScenarioDef) { call(s, 0).Extract["code"] = "$.status.code" }),
+			want:   []want{{validate.V0729, diag.Error, step0 + "/extract/code"}},
+		},
+		{
+			name: "extract header with upper-case name",
+			breaks: withScenario(func(s *model.ScenarioDef) {
+				call(s, 0).Extract["requestId"] = "$.headers['X-Request-Id']"
+			}),
+			want: []want{{validate.V0737, diag.Warning, step0 + "/extract/requestId"}},
 		},
 		{
 			name: "invalid name and path are both reported",
